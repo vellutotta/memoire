@@ -1,6 +1,5 @@
 package model;
 
-
 public class Book {
     private String id;
     private String title;
@@ -12,7 +11,15 @@ public class Book {
     public Book() {
     }
 
-    // Costruttore completo
+    // Costruttore a 4 parametri (usato quando l'ISBN non è disponibile)
+    public Book(String id, String title, String author, String coverUrl) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+        this.coverUrl = coverUrl;
+    }
+
+    // Costruttore completo a 5 parametri
     public Book(String id, String title, String author, String isbn, String coverUrl) {
         this.id = id;
         this.title = title;

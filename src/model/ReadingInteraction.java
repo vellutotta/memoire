@@ -23,6 +23,9 @@ public class ReadingInteraction {
         this.endDate = endDate;
     }
 
+    public ReadingInteraction(String bookId, String userId, ReadingStatus status, int rating, String review) {
+    }
+
     public String getBookId() { return bookId; }
     public void setBookId(String bookId) { this.bookId = bookId; }
 
