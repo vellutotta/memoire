@@ -20,7 +20,7 @@ public class ReadingInteraction {
         this.rating = rating;
         this.reviewText = reviewText;
         this.startDate = startDate;
-        this.endDate = endDate;
+        this.endDate = java.time.LocalDate.now();
     }
 
     public String getBookId() { return bookId; }

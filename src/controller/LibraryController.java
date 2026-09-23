@@ -17,7 +17,9 @@ public class LibraryController {
         this.bookDAO = new MockBookDAO();
     }
 
-    public List<Book> getAllBooks() { return bookDAO.getAllBooks(); }
+    public List<Book> getAllBooks() {
+        return bookDAO.getAllBooks();
+    }
 
     public List<Book> getBooksByStatus(ReadingStatus status) {
         return bookDAO.getBooksByStatus(currentUserId, status);
@@ -41,5 +43,12 @@ public class LibraryController {
 
     public void updateReview(String bookId, int rating, String reviewText) {
         bookDAO.updateReview(bookId, currentUserId, rating, reviewText);
+        ReadingInteraction inter = getInteraction(bookId);
+        if (inter != null) {
+            inter.setRating(rating);
+            inter.setReviewText(reviewText);
+            inter.setStatus(ReadingStatus.FINISHED);      // Rende il libro "completato"
+            inter.setEndDate(java.time.LocalDate.now());
+        }
     }
 }

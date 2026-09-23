@@ -76,6 +76,8 @@ public class MockBookDAO implements BookDAO {
         ReadingInteraction interaction = getInteraction(bookId, userId);
         interaction.setRating(rating);
         interaction.setReviewText(reviewText);
+        interaction.setStatus(ReadingStatus.FINISHED);
+        interaction.setEndDate(java.time.LocalDate.now());
     }
 
     @Override
