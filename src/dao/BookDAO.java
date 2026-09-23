@@ -29,6 +29,8 @@ public interface BookDAO {
     // Aggiorna la valutazione in stelle (da 1 a 5)
     void updateRating(String bookId, String userId, int rating);
 
+    void updateReview(String bookId, String userId, int rating, String reviewText);
+
     // Filtra i libri in base allo stato di lettura
     List<Book> getBooksByStatus(String userId, ReadingStatus status);
 }

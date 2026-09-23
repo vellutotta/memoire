@@ -11,18 +11,20 @@ import java.util.List;
 public class LibraryController {
 
     private final BookDAO bookDAO;
-    private final String currentUserId = "user1"; // Utente fittizio per il test
+    private final String currentUserId = "user1";
 
     public LibraryController() {
         this.bookDAO = new MockBookDAO();
     }
 
-    public List<Book> getAllBooks() {
-        return bookDAO.getAllBooks();
-    }
+    public List<Book> getAllBooks() { return bookDAO.getAllBooks(); }
 
     public List<Book> getBooksByStatus(ReadingStatus status) {
         return bookDAO.getBooksByStatus(currentUserId, status);
+    }
+
+    public List<Book> searchBooks(String query) {
+        return bookDAO.searchBooks(query);
     }
 
     public ReadingInteraction getInteraction(String bookId) {
@@ -35,5 +37,9 @@ public class LibraryController {
 
     public void updateRating(String bookId, int rating) {
         bookDAO.updateRating(bookId, currentUserId, rating);
+    }
+
+    public void updateReview(String bookId, int rating, String reviewText) {
+        bookDAO.updateReview(bookId, currentUserId, rating, reviewText);
     }
 }
