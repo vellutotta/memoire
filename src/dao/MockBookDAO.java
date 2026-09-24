@@ -28,14 +28,19 @@ public class MockBookDAO implements BookDAO {
     }
 
     @Override
-    public List<Book> getAllBooks() { return new ArrayList<>(books); }
+    public List<Book> getAllBooks() {
+        return new ArrayList<>(books);
+    }
 
     @Override
     public List<Book> searchBooks(String query) {
-        if (query == null || query.isBlank()) return getAllBooks();
+        if (query == null || query.isBlank()) {
+            return getAllBooks();
+        }
         String lowerQuery = query.toLowerCase();
         return books.stream()
-                .filter(b -> b.getTitle().toLowerCase().contains(lowerQuery) || b.getAuthor().toLowerCase().contains(lowerQuery))
+                .filter(b -> b.getTitle().toLowerCase().contains(lowerQuery) ||
+                        b.getAuthor().toLowerCase().contains(lowerQuery))
                 .collect(Collectors.toList());
     }
 
@@ -45,7 +50,9 @@ public class MockBookDAO implements BookDAO {
     }
 
     @Override
-    public void addBook(Book book) { if (book != null) books.add(book); }
+    public void addBook(Book book) {
+        if (book != null) books.add(book);
+    }
 
     @Override
     public ReadingInteraction getInteraction(String bookId, String userId) {
@@ -77,7 +84,7 @@ public class MockBookDAO implements BookDAO {
         interaction.setRating(rating);
         interaction.setReviewText(reviewText);
         interaction.setStatus(ReadingStatus.FINISHED);
-        interaction.setEndDate(java.time.LocalDate.now());
+        interaction.setEndDate(LocalDate.now());
     }
 
     @Override

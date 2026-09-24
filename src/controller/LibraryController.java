@@ -38,17 +38,31 @@ public class LibraryController {
     }
 
     public void updateRating(String bookId, int rating) {
+        // Controllo validità del voto richiesto dal test
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("Il voto deve essere compreso tra 1 e 5.");
+        }
+
         bookDAO.updateRating(bookId, currentUserId, rating);
     }
 
     public void updateReview(String bookId, int rating, String reviewText) {
+        // Controllo validità del voto richiesto dal test
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("Il voto deve essere compreso tra 1 e 5.");
+        }
+
         bookDAO.updateReview(bookId, currentUserId, rating, reviewText);
         ReadingInteraction inter = getInteraction(bookId);
         if (inter != null) {
             inter.setRating(rating);
             inter.setReviewText(reviewText);
             inter.setStatus(ReadingStatus.FINISHED);      // Rende il libro "completato"
-            inter.setEndDate(java.time.LocalDate.now());
+
+            // FIX: Imposta la data a "oggi" SOLO se il libro non ha già una data di fine assegnata.
+            if (inter.getEndDate() == null) {
+                inter.setEndDate(java.time.LocalDate.now());
+            }
         }
     }
 }
