@@ -32,7 +32,7 @@ public class MainApp extends JFrame {
     private int selectedYear = LocalDate.now().getYear();
 
     public MainApp() {
-        setTitle("BiblioTech");
+        setTitle("Memoir");
 
         setSize(900, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
