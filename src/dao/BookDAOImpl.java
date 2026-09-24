@@ -63,7 +63,8 @@ public class BookDAOImpl implements BookDAO {
 
     @Override
     public void addBook(Book book) {
-        String sql = "INSERT INTO Books (id, title, author, cover_url) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Books (id, title, author, cover_url) VALUES (?, ?, ?, ?) " +
+                "ON CONFLICT (id) DO NOTHING";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, book.getId());
             stmt.setString(2, book.getTitle());

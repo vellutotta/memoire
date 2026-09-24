@@ -3,6 +3,7 @@ import dao.BookDAOImpl;
 import database.DatabaseManager;
 import model.Book;
 import model.ReadingStatus;
+import api.OpenLibraryClient; // Nuovo import per l'API
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -44,6 +45,14 @@ public class Main {
         System.out.println("\n4. Aggiornamento stato di lettura e voto utente...");
         bookDAO.updateReadingStatus("B101", "U1", ReadingStatus.READING);
         bookDAO.updateRating("B101", "U1", 5);
+
+        // 5. Test integrazione Open Library
+        System.out.println("\n5. Test ricerca API Open Library...");
+        OpenLibraryClient apiClient = new OpenLibraryClient();
+        List<Book> risultati = apiClient.searchBooks("Il signore degli anelli");
+        for (Book b : risultati) {
+            System.out.println(" - Trovato: " + b.getTitle() + " di " + b.getAuthor() + " (ID: " + b.getId() + ")");
+        }
 
         System.out.println("\n=== TEST COMPLETATO CON SUCCESSO! ===");
     }
