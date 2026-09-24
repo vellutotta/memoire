@@ -23,7 +23,6 @@ public class ReadingInteraction {
         this.endDate = java.time.LocalDate.now();
     }
 
-    // Costruttore a 5 parametri corretto con le assegnazioni delle variabili
     public ReadingInteraction(String bookId, String userId, ReadingStatus status, int rating, String reviewText) {
         this.bookId = bookId;
         this.userId = userId;
@@ -47,11 +46,7 @@ public class ReadingInteraction {
     public String getReviewText() { return reviewText; }
     public void setReviewText(String reviewText) { this.reviewText = reviewText; }
 
-    // Alias per compatibilità nei test se viene chiamato getReview()
     public String getReview() { return reviewText; }
-
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
 
     public LocalDate getEndDate() { return endDate; }
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }

@@ -16,7 +16,7 @@ public class BookController {
         this.apiClient = new OpenLibraryClient();
     }
 
-    // Cerca i libri online via API
+    //cerca i libri online via API
     public List<Book> cercaLibriOnline(String query) {
         if (query == null || query.trim().isEmpty()) {
             return List.of();
@@ -24,12 +24,17 @@ public class BookController {
         return apiClient.searchBooks(query);
     }
 
-    // Salva un libro nel Database PostgreSQL
+    //salva un libro nel DB
     public void salvaLibroNellaLibreria(Book book) {
         bookDAO.addBook(book);
     }
 
-    // Recupera tutti i libri salvati nel Database
+    //rimuove un libro dal DB
+    public void rimuoviLibro(String bookId) {
+        bookDAO.rimuoviLibroDaLibreria(bookId);
+    }
+
+    //recupera tutti i libri salvati nel DB
     public List<Book> getLibreriaUtente() {
         return bookDAO.getAllBooks();
     }

@@ -1,7 +1,7 @@
 package controller;
 
 import dao.BookDAO;
-import dao.MockBookDAO;
+import dao.BookDAOImpl;
 import model.Book;
 import model.ReadingInteraction;
 import model.ReadingStatus;
@@ -13,8 +13,14 @@ public class LibraryController {
     private final BookDAO bookDAO;
     private final String currentUserId = "user1";
 
+    // Costruttore di default (utilizzato dall'applicazione con PostgreSQL)
     public LibraryController() {
-        this.bookDAO = new MockBookDAO();
+        this.bookDAO = new BookDAOImpl();
+    }
+
+    // NUOVO: Costruttore per i Test (permette di iniettare MockBookDAO)
+    public LibraryController(BookDAO bookDAO) {
+        this.bookDAO = bookDAO;
     }
 
     public List<Book> getAllBooks() {
@@ -38,7 +44,6 @@ public class LibraryController {
     }
 
     public void updateRating(String bookId, int rating) {
-        // Controllo validità del voto richiesto dal test
         if (rating < 1 || rating > 5) {
             throw new IllegalArgumentException("Il voto deve essere compreso tra 1 e 5.");
         }
@@ -47,7 +52,6 @@ public class LibraryController {
     }
 
     public void updateReview(String bookId, int rating, String reviewText) {
-        // Controllo validità del voto richiesto dal test
         if (rating < 1 || rating > 5) {
             throw new IllegalArgumentException("Il voto deve essere compreso tra 1 e 5.");
         }
@@ -57,12 +61,20 @@ public class LibraryController {
         if (inter != null) {
             inter.setRating(rating);
             inter.setReviewText(reviewText);
-            inter.setStatus(ReadingStatus.FINISHED);      // Rende il libro "completato"
+            inter.setStatus(ReadingStatus.FINISHED);
 
-            // FIX: Imposta la data a "oggi" SOLO se il libro non ha già una data di fine assegnata.
             if (inter.getEndDate() == null) {
                 inter.setEndDate(java.time.LocalDate.now());
             }
         }
+    }
+
+    //collegato il metodo di rimozione al DAO
+    public void removeInteraction(String bookId) {
+        bookDAO.rimuoviLibroDaLibreria(bookId);
+    }
+
+    public void rimuoviLibro(String bookId) {
+        bookDAO.rimuoviLibroDaLibreria(bookId);
     }
 }
