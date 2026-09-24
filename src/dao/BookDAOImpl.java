@@ -23,7 +23,7 @@ public class BookDAOImpl implements BookDAO {
                 books.add(extractBookFromResultSet(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Errore SQL in getAllBooks: " + e.getMessage(), e);
         }
         return books;
     }
@@ -31,7 +31,6 @@ public class BookDAOImpl implements BookDAO {
     @Override
     public List<Book> searchBooks(String query) {
         List<Book> books = new ArrayList<>();
-        // Aggiornato con i nomi colonna in inglese: title, author
         String sql = "SELECT * FROM Books WHERE LOWER(title) LIKE ? OR LOWER(author) LIKE ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             String searchPattern = "%" + query.toLowerCase() + "%";
@@ -42,7 +41,7 @@ public class BookDAOImpl implements BookDAO {
                 books.add(extractBookFromResultSet(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Errore SQL in searchBooks: " + e.getMessage(), e);
         }
         return books;
     }
@@ -57,15 +56,15 @@ public class BookDAOImpl implements BookDAO {
                 return extractBookFromResultSet(rs);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Errore SQL in getBookById: " + e.getMessage(), e);
         }
         return null;
     }
 
     @Override
     public void addBook(Book book) {
-        // Aggiornato con i nomi colonna in inglese: title, author, cover_url
-        String sql = "INSERT INTO Books (id, title, author, cover_url) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO Books (id, title, author, cover_url) VALUES (?, ?, ?, ?) " +
+                "ON CONFLICT (id) DO NOTHING";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, book.getId());
             stmt.setString(2, book.getTitle());
@@ -73,29 +72,8 @@ public class BookDAOImpl implements BookDAO {
             stmt.setString(4, book.getCoverUrl());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Errore SQL in addBook: " + e.getMessage(), e);
         }
-    }
-
-    @Override
-    public ReadingInteraction getInteraction(String bookId, String userId) {
-        String sql = "SELECT * FROM User_Books WHERE book_id = ? AND user_id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, bookId);
-            stmt.setString(2, userId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                String statusStr = rs.getString("status");
-                ReadingStatus status = statusStr != null ? ReadingStatus.valueOf(statusStr) : null;
-                int rating = rs.getInt("rating");
-                String review = rs.getString("review");
-
-                return new ReadingInteraction(bookId, userId, status, rating, review);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     @Override
@@ -108,8 +86,32 @@ public class BookDAOImpl implements BookDAO {
             stmt.setString(3, status != null ? status.name() : null);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Errore SQL in updateReadingStatus: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public ReadingInteraction getInteraction(String bookId, String userId) {
+        String sql = "SELECT * FROM User_Books WHERE book_id = ? AND user_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, bookId);
+            stmt.setString(2, userId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String statusStr = rs.getString("status");
+                ReadingStatus status = null;
+                if (statusStr != null && !statusStr.trim().isEmpty()) {
+                    status = ReadingStatus.valueOf(statusStr.trim().toUpperCase());
+                }
+                int rating = rs.getInt("rating");
+                String review = rs.getString("review");
+
+                return new ReadingInteraction(bookId, userId, status, rating, review);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Errore SQL in getInteraction: " + e.getMessage(), e);
+        }
+        return null;
     }
 
     @Override
@@ -122,7 +124,7 @@ public class BookDAOImpl implements BookDAO {
             stmt.setInt(3, rating);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Errore SQL in updateRating: " + e.getMessage(), e);
         }
     }
 
@@ -137,7 +139,7 @@ public class BookDAOImpl implements BookDAO {
             stmt.setString(4, reviewText);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Errore SQL in updateReview: " + e.getMessage(), e);
         }
     }
 
@@ -154,12 +156,11 @@ public class BookDAOImpl implements BookDAO {
                 books.add(extractBookFromResultSet(rs));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Errore SQL in getBooksByStatus: " + e.getMessage(), e);
         }
         return books;
     }
 
-    // Metodo helper per estrarre il libro dai risultati SQL usano i nomi di colonna inglesi
     private Book extractBookFromResultSet(ResultSet rs) throws SQLException {
         return new Book(
                 rs.getString("id"),

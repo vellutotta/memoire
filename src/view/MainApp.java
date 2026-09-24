@@ -1,5 +1,6 @@
 package view;
 
+import controller.BookController;
 import controller.LibraryController;
 import model.Book;
 import model.ReadingInteraction;
@@ -31,6 +32,8 @@ public class MainApp extends JFrame {
     private int selectedMonth = LocalDate.now().getMonthValue();
     private int selectedYear = LocalDate.now().getYear();
 
+    private BookController bookController = new BookController();
+
     public MainApp() {
         setTitle("Memoir");
 
@@ -61,7 +64,7 @@ public class MainApp extends JFrame {
         topPanel.setBackground(BG_COLOR);
         topPanel.setBorder(new EmptyBorder(20, 30, 10, 30));
 
-        JLabel titleLbl = new JLabel("I miei libri");
+        JLabel titleLbl = new JLabel("I miei libri & Ricerca");
         titleLbl.setFont(new Font("SansSerif", Font.BOLD, 24));
         titleLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -73,7 +76,7 @@ public class MainApp extends JFrame {
         JTextField searchField = new JTextField();
         searchField.setFont(new Font("SansSerif", Font.PLAIN, 14));
 
-        JButton searchBtn = new JButton("🔍 Cerca");
+        JButton searchBtn = new JButton("🔍 Cerca su Open Library");
         searchBtn.setFont(new Font("SansSerif", Font.BOLD, 13));
 
         searchBarPanel.add(searchField, BorderLayout.CENTER);
@@ -86,16 +89,37 @@ public class MainApp extends JFrame {
         JPanel resultsContainer = new JPanel(new BorderLayout());
         resultsContainer.setBackground(BG_COLOR);
 
+        // --- AZIONE DI RICERCA INTEGATAA CON API ---
         java.awt.event.ActionListener performSearch = e -> {
-            String query = searchField.getText();
-            List<Book> foundBooks = controller.searchBooks(query);
-            renderSearchResults(resultsContainer, foundBooks);
+            String query = searchField.getText().trim();
+
+            if (query.isEmpty()) {
+                // Se la barra è vuota, mostra i libri del database
+                renderSearchResults(resultsContainer, bookController.getLibreriaUtente());
+            } else {
+                // Mostra un messaggio di caricamento temporaneo
+                resultsContainer.removeAll();
+                JLabel loadingLbl = new JLabel("🔍 Ricerca in corso su Open Library...", SwingConstants.CENTER);
+                loadingLbl.setFont(new Font("SansSerif", Font.ITALIC, 16));
+                resultsContainer.add(loadingLbl, BorderLayout.CENTER);
+                resultsContainer.revalidate();
+                resultsContainer.repaint();
+
+                // Eseguiamo la ricerca in un Thread separato per non bloccare l'interfaccia
+                new Thread(() -> {
+                    List<Book> foundBooks = bookController.cercaLibriOnline(query);
+
+                    // Aggiorniamo l'interfaccia sul thread principale di Swing
+                    SwingUtilities.invokeLater(() -> renderSearchResults(resultsContainer, foundBooks));
+                }).start();
+            }
         };
 
         searchBtn.addActionListener(performSearch);
         searchField.addActionListener(performSearch);
 
-        renderSearchResults(resultsContainer, controller.getAllBooks());
+        // Di base all'apertura mostra i libri già salvati nel Database
+        renderSearchResults(resultsContainer, bookController.getLibreriaUtente());
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(resultsContainer, BorderLayout.CENTER);
@@ -138,6 +162,10 @@ public class MainApp extends JFrame {
                 bookCard.addMouseListener(new java.awt.event.MouseAdapter() {
                     @Override
                     public void mouseClicked(java.awt.event.MouseEvent e) {
+                        // Salva il libro nel DB (grazie a ON CONFLICT DO NOTHING non duplicherà se esiste già)
+                        bookController.salvaLibroNellaLibreria(book);
+
+                        // Apre la schermata di dettaglio
                         showBookDetailView(book);
                     }
                 });
