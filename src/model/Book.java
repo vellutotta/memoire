@@ -7,11 +7,10 @@ public class Book {
     private String isbn;
     private String coverUrl;
 
-    // Costruttore vuoto
     public Book() {
     }
 
-    // Costruttore a 4 parametri (usato quando l'ISBN non è disponibile)
+    //costruttore a 4 parametri (usato quando l'ISBN non è disponibile)
     public Book(String id, String title, String author, String coverUrl) {
         this.id = id;
         this.title = title;
@@ -19,7 +18,7 @@ public class Book {
         this.coverUrl = coverUrl;
     }
 
-    // Costruttore completo a 5 parametri
+    //costruttore completo
     public Book(String id, String title, String author, String isbn, String coverUrl) {
         this.id = id;
         this.title = title;
@@ -28,7 +27,7 @@ public class Book {
         this.coverUrl = coverUrl;
     }
 
-    // Getter e Setter
+    //metodi Getter e Setter
     public String getId() {
         return id;
     }

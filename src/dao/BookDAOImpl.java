@@ -63,16 +63,58 @@ public class BookDAOImpl implements BookDAO {
 
     @Override
     public void addBook(Book book) {
-        String sql = "INSERT INTO Books (id, title, author, cover_url) VALUES (?, ?, ?, ?) " +
+        //inserisce l'utente 'user1' fornendo sia 'username' che 'email' (soddisfa i vincoli NOT NULL del DB)
+        String sqlUser = "INSERT INTO users (id, username, email) VALUES ('user1', 'Utente', 'user1@example.com') ON CONFLICT (id) DO NOTHING";
+
+        //inserisce il libro nel DB generale
+        String sqlBook = "INSERT INTO Books (id, title, author, cover_url) VALUES (?, ?, ?, ?) " +
                 "ON CONFLICT (id) DO NOTHING";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, book.getId());
-            stmt.setString(2, book.getTitle());
-            stmt.setString(3, book.getAuthor());
-            stmt.setString(4, book.getCoverUrl());
-            stmt.executeUpdate();
+
+        //associa il libro all'utente nella tabella User_Books
+        String sqlInteraction = "INSERT INTO User_Books (book_id, user_id, status) VALUES (?, 'user1', 'UNREAD') " +
+                "ON CONFLICT (book_id, user_id) DO NOTHING";
+
+        try {
+            //assicura la presenza dell'utente nel DB
+            try (Statement stmt = connection.createStatement()) {
+                stmt.executeUpdate(sqlUser);
+            }
+            //salva il libro
+            try (PreparedStatement stmt = connection.prepareStatement(sqlBook)) {
+                stmt.setString(1, book.getId());
+                stmt.setString(2, book.getTitle());
+                stmt.setString(3, book.getAuthor());
+                stmt.setString(4, book.getCoverUrl());
+                stmt.executeUpdate();
+            }
+            //collega il libro all'utente
+            try (PreparedStatement stmt = connection.prepareStatement(sqlInteraction)) {
+                stmt.setString(1, book.getId());
+                stmt.executeUpdate();
+            }
         } catch (SQLException e) {
             throw new RuntimeException("Errore SQL in addBook: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void rimuoviLibroDaLibreria(String bookId) {
+        //rimuove il collegamento tra l'utente e il libro
+        String sqlInteraction = "DELETE FROM User_Books WHERE book_id = ?";
+        //elimina anche il libro dal database generale per mantenere pulito il DB
+        String sqlBook = "DELETE FROM Books WHERE id = ?";
+
+        try {
+            try (PreparedStatement pstmt = connection.prepareStatement(sqlInteraction)) {
+                pstmt.setString(1, bookId);
+                pstmt.executeUpdate();
+            }
+            try (PreparedStatement pstmt = connection.prepareStatement(sqlBook)) {
+                pstmt.setString(1, bookId);
+                pstmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -168,5 +210,33 @@ public class BookDAOImpl implements BookDAO {
                 rs.getString("author"),
                 rs.getString("cover_url")
         );
+    }
+
+    public int getLibriLettiCount(String userId) {
+        String sql = "SELECT COUNT(*) FROM User_Books WHERE user_id = ? AND status = 'COMPLETED'";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public double getMediaValutazioni(String userId) {
+        String sql = "SELECT AVG(rating) FROM User_Books WHERE user_id = ? AND rating > 0";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, userId);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0.0;
     }
 }

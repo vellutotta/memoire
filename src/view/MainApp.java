@@ -35,7 +35,7 @@ public class MainApp extends JFrame {
     private BookController bookController = new BookController();
 
     public MainApp() {
-        setTitle("BiblioTech");
+        setTitle("Memoir");
 
         setSize(900, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -52,7 +52,7 @@ public class MainApp extends JFrame {
         showHomeView();
     }
 
-    // 1. Vista Home (Cerca + Tutti i libri)
+    //vista home
     private void showHomeView() {
         contentArea.removeAll();
 
@@ -64,7 +64,7 @@ public class MainApp extends JFrame {
         topPanel.setBackground(BG_COLOR);
         topPanel.setBorder(new EmptyBorder(20, 30, 10, 30));
 
-        JLabel titleLbl = new JLabel("I miei libri & Ricerca");
+        JLabel titleLbl = new JLabel("I miei libri");
         titleLbl.setFont(new Font("SansSerif", Font.BOLD, 24));
         titleLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -89,27 +89,27 @@ public class MainApp extends JFrame {
         JPanel resultsContainer = new JPanel(new BorderLayout());
         resultsContainer.setBackground(BG_COLOR);
 
-        // --- AZIONE DI RICERCA INTEGATAA CON API ---
+        //uso AI
         java.awt.event.ActionListener performSearch = e -> {
             String query = searchField.getText().trim();
 
             if (query.isEmpty()) {
-                // Se la barra è vuota, mostra i libri del database
+                //se la barra è vuota, mostra i libri del database
                 renderSearchResults(resultsContainer, bookController.getLibreriaUtente());
             } else {
-                // Mostra un messaggio di caricamento temporaneo
+                //mostra un messaggio di caricamento temporaneo
                 resultsContainer.removeAll();
-                JLabel loadingLbl = new JLabel("🔍 Ricerca in corso su Open Library...", SwingConstants.CENTER);
+                JLabel loadingLbl = new JLabel("🔍 Ricerca in corso...", SwingConstants.CENTER);
                 loadingLbl.setFont(new Font("SansSerif", Font.ITALIC, 16));
                 resultsContainer.add(loadingLbl, BorderLayout.CENTER);
                 resultsContainer.revalidate();
                 resultsContainer.repaint();
 
-                // Eseguiamo la ricerca in un Thread separato per non bloccare l'interfaccia
+                //eseguo la ricerca in un Thread separato per non bloccare l'interfaccia
                 new Thread(() -> {
                     List<Book> foundBooks = bookController.cercaLibriOnline(query);
 
-                    // Aggiorniamo l'interfaccia sul thread principale di Swing
+                    //aggiorno l'interfaccia sul thread principale di Swing
                     SwingUtilities.invokeLater(() -> renderSearchResults(resultsContainer, foundBooks));
                 }).start();
             }
@@ -118,7 +118,7 @@ public class MainApp extends JFrame {
         searchBtn.addActionListener(performSearch);
         searchField.addActionListener(performSearch);
 
-        // Di base all'apertura mostra i libri già salvati nel Database
+        //all'apertura mostra i libri già salvati nel Database
         renderSearchResults(resultsContainer, bookController.getLibreriaUtente());
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
@@ -128,6 +128,7 @@ public class MainApp extends JFrame {
         refreshUI();
     }
 
+    //risultato dopo aver cercato il libro
     private void renderSearchResults(JPanel container, List<Book> books) {
         container.removeAll();
 
@@ -162,10 +163,7 @@ public class MainApp extends JFrame {
                 bookCard.addMouseListener(new java.awt.event.MouseAdapter() {
                     @Override
                     public void mouseClicked(java.awt.event.MouseEvent e) {
-                        // Salva il libro nel DB (grazie a ON CONFLICT DO NOTHING non duplicherà se esiste già)
-                        bookController.salvaLibroNellaLibreria(book);
-
-                        // Apre la schermata di dettaglio
+                        //apre semplicemente la schermata di dettaglio
                         showBookDetailView(book);
                     }
                 });
@@ -188,7 +186,7 @@ public class MainApp extends JFrame {
         container.repaint();
     }
 
-    // 2. Vista Categorie
+    //vista "categorie"
     private void showLibraryCategoriesView() {
         contentArea.removeAll();
 
@@ -197,13 +195,15 @@ public class MainApp extends JFrame {
         panel.setBackground(BG_COLOR);
         panel.setBorder(new EmptyBorder(25, 40, 25, 40));
 
-        JLabel titleLabel = new JLabel("Libreria");
+        JLabel titleLabel = new JLabel("Libreria", SwingConstants.CENTER);
         titleLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
-        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         panel.add(titleLabel);
         panel.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        panel.add(createCategoryRow("📚", "Tutti i Libri", controller.getAllBooks().size() + " libri", e -> showHomeView()));
+        panel.add(createCategoryRow("📚", "Tutti i Libri", bookController.getLibreriaUtente().size() + " libri", e -> showGridByCategory(null)));
         panel.add(createCategoryRow("🔖", "Da leggere", controller.getBooksByStatus(ReadingStatus.UNREAD).size() + " elementi", e -> showGridByCategory(ReadingStatus.UNREAD)));
         panel.add(createCategoryRow("📖", "In lettura", controller.getBooksByStatus(ReadingStatus.READING).size() + " libri", e -> showGridByCategory(ReadingStatus.READING)));
         panel.add(createCategoryRow("✅", "Lettura terminata", controller.getBooksByStatus(ReadingStatus.FINISHED).size() + " letture", e -> showGridByCategory(ReadingStatus.FINISHED)));
@@ -263,11 +263,11 @@ public class MainApp extends JFrame {
         return wrapper;
     }
 
-    // 3. Vista Griglia Categoria
+    //vista griglia di ogni "categoria"
     private void showGridByCategory(ReadingStatus filterStatus) {
         contentArea.removeAll();
 
-        List<Book> books = controller.getBooksByStatus(filterStatus);
+        List<Book> books = (filterStatus == null) ? bookController.getLibreriaUtente() : controller.getBooksByStatus(filterStatus);
 
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(BG_COLOR);
@@ -277,7 +277,7 @@ public class MainApp extends JFrame {
         btnBack.addActionListener(e -> showLibraryCategoriesView());
         topPanel.add(btnBack, BorderLayout.WEST);
 
-        String titleText = "Categoria (" + books.size() + " libri)";
+        String titleText = (filterStatus == null ? "Tutti i Libri" : "" + books.size() + " libri");
         JLabel title = new JLabel(titleText, SwingConstants.CENTER);
         title.setFont(new Font("SansSerif", Font.BOLD, 20));
         topPanel.add(title, BorderLayout.CENTER);
@@ -328,7 +328,7 @@ public class MainApp extends JFrame {
         refreshUI();
     }
 
-    // 4. Vista Dettaglio Libro
+    //vista dettaglio libro
     private void showBookDetailView(Book book) {
         contentArea.removeAll();
 
@@ -395,8 +395,46 @@ public class MainApp extends JFrame {
         infoPanel.add(genresPanel);
         infoPanel.add(Box.createRigidArea(new Dimension(0, 20)));
 
+        //AI: recupera l'interazione (può essere null se il libro non è ancora stato salvato)
         ReadingInteraction interaction = controller.getInteraction(book.getId());
 
+        //AI: controlla in modo sicuro se il libro fa parte della libreria
+        boolean inLibreria = bookController.getLibreriaUtente().stream()
+                .anyMatch(b ->
+                        (b.getId() != null && book.getId() != null && b.getId().equals(book.getId())) ||
+                                (b.getIsbn() != null && book.getIsbn() != null && b.getIsbn().equals(book.getIsbn()))
+                );
+
+        //AI: estrai stato, voto e recensione in modo sicuro
+        ReadingStatus currentStatus = (interaction != null && interaction.getStatus() != null)
+                ? interaction.getStatus()
+                : ReadingStatus.UNREAD;
+        int currentRating = (interaction != null) ? interaction.getRating() : 0;
+        String commentText = (interaction != null && interaction.getReviewText() != null && !interaction.getReviewText().isBlank())
+                ? interaction.getReviewText()
+                : "Nessun commento inserito";
+
+        //pulsante add e remove
+        JButton btnToggleLibrary = new JButton(inLibreria ? "🗑️ Rimuovi dalla libreria" : "➕ Aggiungi alla libreria");
+        btnToggleLibrary.setFont(new Font("SansSerif", Font.BOLD, 13));
+        btnToggleLibrary.setBackground(inLibreria ? new Color(220, 53, 69) : new Color(40, 167, 69));
+        btnToggleLibrary.setForeground(Color.WHITE);
+        btnToggleLibrary.setFocusPainted(false);
+        btnToggleLibrary.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        btnToggleLibrary.addActionListener(e -> {
+            if (inLibreria) {
+                bookController.rimuoviLibro(book.getId());
+            } else {
+                bookController.salvaLibroNellaLibreria(book);
+            }
+            showBookDetailView(book);
+        });
+
+        infoPanel.add(btnToggleLibrary);
+        infoPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+
+        //dropbox stato lettura
         JPanel statusBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         statusBox.setOpaque(false);
         statusBox.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -406,7 +444,7 @@ public class MainApp extends JFrame {
         statusBox.add(lblStato);
 
         JComboBox<ReadingStatus> statusCombo = new JComboBox<>(ReadingStatus.values());
-        statusCombo.setSelectedItem(interaction.getStatus());
+        statusCombo.setSelectedItem(currentStatus);
         statusCombo.addActionListener(e -> {
             controller.updateReadingStatus(book.getId(), (ReadingStatus) statusCombo.getSelectedItem());
         });
@@ -419,6 +457,7 @@ public class MainApp extends JFrame {
 
         mainBox.add(Box.createRigidArea(new Dimension(0, 25)));
 
+        //pannello recensione
         JPanel reviewCard = new JPanel();
         reviewCard.setLayout(new BoxLayout(reviewCard, BoxLayout.Y_AXIS));
         reviewCard.setBackground(CARD_COLOR);
@@ -434,7 +473,6 @@ public class MainApp extends JFrame {
         reviewCard.add(Box.createRigidArea(new Dimension(0, 10)));
 
         StringBuilder starsStr = new StringBuilder();
-        int currentRating = interaction.getRating();
         for (int i = 1; i <= 5; i++) {
             starsStr.append(i <= currentRating ? "★ " : "☆ ");
         }
@@ -446,7 +484,7 @@ public class MainApp extends JFrame {
 
         reviewCard.add(Box.createRigidArea(new Dimension(0, 5)));
 
-        JLabel currentComment = new JLabel("<html><i>\"" + (interaction.getReviewText() != null && !interaction.getReviewText().isBlank() ? interaction.getReviewText() : "Nessun commento inserito") + "\"</i></html>");
+        JLabel currentComment = new JLabel("<html><i>\"" + commentText + "\"</i></html>");
         currentComment.setFont(new Font("SansSerif", Font.PLAIN, 13));
         currentComment.setForeground(Color.DARK_GRAY);
         reviewCard.add(currentComment);
@@ -454,7 +492,10 @@ public class MainApp extends JFrame {
         reviewCard.add(Box.createRigidArea(new Dimension(0, 15)));
 
         JButton btnAddReview = new JButton("✍️ Scrivi / Modifica Recensione");
-        btnAddReview.addActionListener(e -> openReviewDialog(book, interaction));
+        btnAddReview.addActionListener(e -> {
+            ReadingInteraction safeInteraction = (interaction != null) ? interaction : new ReadingInteraction();
+            openReviewDialog(book, safeInteraction);
+        });
         reviewCard.add(btnAddReview);
 
         mainBox.add(reviewCard);
@@ -537,7 +578,7 @@ public class MainApp extends JFrame {
         dialog.setVisible(true);
     }
 
-    // 5. Barra Navigazione Inferiore
+    //barra inferiore (home, libreria, statistiche)
     private JPanel createBottomNavBar() {
         JPanel navBar = new JPanel(new FlowLayout(FlowLayout.CENTER, 40, 10));
         navBar.setBackground(CARD_COLOR);
@@ -559,7 +600,7 @@ public class MainApp extends JFrame {
         return navBar;
     }
 
-    // 6. Vista Statistiche
+    //vista statistiche
     private void showStatisticheView() {
         contentArea.removeAll();
 
@@ -607,13 +648,25 @@ public class MainApp extends JFrame {
 
         for (Book b : allBooks) {
             ReadingInteraction inter = controller.getInteraction(b.getId());
-            if (inter != null && inter.getStatus() == ReadingStatus.FINISHED && inter.getEndDate() != null) {
-                if (inter.getEndDate().getMonthValue() == selectedMonth && inter.getEndDate().getYear() == selectedYear) {
-                    monthInteractions.add(inter);
-                    totalStars += inter.getRating();
+            if (inter != null) {
+                //considera il libro se è segnato come finito/completato O se ha un voto/recensione inserito
+                boolean isLetto = inter.getStatus() == ReadingStatus.FINISHED
+                        || inter.getStatus() == ReadingStatus.FINISHED
+                        || inter.getRating() > 0;
 
-                    int dayNum = inter.getEndDate().getDayOfMonth();
-                    dayToBooksMap.computeIfAbsent(dayNum, k -> new ArrayList<>()).add(b);
+                if (isLetto) {
+                    //AI: se getEndDate() è null, usa la data odierna come fallback per mostrare la statistica
+                    java.time.LocalDate date = (inter.getEndDate() != null)
+                            ? inter.getEndDate()
+                            : java.time.LocalDate.now();
+
+                    if (date.getMonthValue() == selectedMonth && date.getYear() == selectedYear) {
+                        monthInteractions.add(inter);
+                        totalStars += inter.getRating();
+
+                        int dayNum = date.getDayOfMonth();
+                        dayToBooksMap.computeIfAbsent(dayNum, k -> new ArrayList<>()).add(b);
+                    }
                 }
             }
         }
@@ -731,6 +784,7 @@ public class MainApp extends JFrame {
                     .mapToInt(b -> controller.getInteraction(b.getId()).getRating())
                     .average().orElse(0.0);
 
+            //AI
             JLabel ratingLbl = new JLabel(String.format(Locale.US, "★ %.1f", avgRating), SwingConstants.CENTER);
             ratingLbl.setFont(new Font("SansSerif", Font.BOLD, 12));
             ratingLbl.setForeground(Color.WHITE);
@@ -738,7 +792,7 @@ public class MainApp extends JFrame {
             cell.add(dayLbl, BorderLayout.NORTH);
             cell.add(ratingLbl, BorderLayout.CENTER);
 
-            // Click listener per aprire il dettaglio della giornata
+            //AI: click listener per aprire il dettaglio della giornata
             cell.addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
                 public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -757,7 +811,7 @@ public class MainApp extends JFrame {
         return cell;
     }
 
-    // Pop-up con i dettagli dei libri recensiti nel giorno selezionato
+    //pop-up con i dettagli dei libri recensiti nel giorno selezionato
     private void showDayDetailDialog(int day, List<Book> books) {
         String[] mesi = {"Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
                 "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"};
@@ -833,7 +887,7 @@ public class MainApp extends JFrame {
 
             card.add(info, BorderLayout.CENTER);
 
-            // Cliccando sulla scheda del libro si va alla vista di dettaglio
+            //cliccando sulla scheda del libro si va alla vista di dettaglio
             card.addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
                 public void mouseClicked(java.awt.event.MouseEvent e) {

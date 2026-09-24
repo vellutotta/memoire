@@ -21,19 +21,19 @@ class BookDAOImplTest {
     @BeforeEach
     void setUp() {
         bookDAO = new BookDAOImpl();
-        // Pulisce eventuali residui da test precedenti prima di iniziare
-        puliscieDatabase();
-        // Crea l'utente di prova necessario per le relazioni
+        //pulisce eventuali residui prima di iniziare
+        pulisciDatabase();
+        //crea l'utente di prova necessario per le chiavi esterne
         creaUtenteDiProvaSeNonEsiste("U1", "Mario Test", "test@email.com");
     }
 
     @AfterEach
     void tearDown() {
-        // Pulisce il database alla fine di ogni test
-        puliscieDatabase();
+        //pulisce il database alla fine di ogni test
+        pulisciDatabase();
     }
 
-    private void puliscieDatabase() {
+    private void pulisciDatabase() {
         String deleteInteractions = "DELETE FROM User_Books WHERE book_id LIKE 'TEST-%'";
         String deleteBooks = "DELETE FROM Books WHERE id LIKE 'TEST-%'";
 
