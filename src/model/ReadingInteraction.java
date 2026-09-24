@@ -20,7 +20,7 @@ public class ReadingInteraction {
         this.rating = rating;
         this.reviewText = reviewText;
         this.startDate = startDate;
-        this.endDate = endDate;
+        this.endDate = java.time.LocalDate.now();
     }
 
     // Costruttore a 5 parametri corretto con le assegnazioni delle variabili
