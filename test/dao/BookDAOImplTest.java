@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,15 +22,15 @@ class BookDAOImplTest {
     @BeforeEach
     void setUp() {
         bookDAO = new BookDAOImpl();
-        //pulisce eventuali residui prima di iniziare
+        // pulisce eventuali residui prima di iniziare
         pulisciDatabase();
-        //crea l'utente di prova necessario per le chiavi esterne
+        // crea l'utente di prova necessario per le chiavi esterne
         creaUtenteDiProvaSeNonEsiste("U1", "Mario Test", "test@email.com");
     }
 
     @AfterEach
     void tearDown() {
-        //pulisce il database alla fine di ogni test
+        // pulisce il database alla fine di ogni test
         pulisciDatabase();
     }
 
@@ -82,13 +83,17 @@ class BookDAOImplTest {
         Book book = new Book("TEST-B1", "Database Systems", "Jane Doe", "http://example.com/cover.jpg");
         bookDAO.addBook(book);
 
-        bookDAO.updateReadingStatus("TEST-B1", "U1", ReadingStatus.FINISHED);
-        bookDAO.updateReview("TEST-B1", "U1", 5, "Ottimo libro!");
+        LocalDate testDate = LocalDate.now();
+
+        // Passiamo testDate come parametro aggiuntivo richiesto dal DAO
+        bookDAO.updateReadingStatus("TEST-B1", "U1", ReadingStatus.FINISHED, testDate);
+        bookDAO.updateReview("TEST-B1", "U1", 5, "Ottimo libro!", testDate);
 
         ReadingInteraction interaction = bookDAO.getInteraction("TEST-B1", "U1");
         assertNotNull(interaction, "L'interazione dovrebbe esistere");
         assertEquals(ReadingStatus.FINISHED, interaction.getStatus(), "Lo stato deve essere FINISHED");
         assertEquals(5, interaction.getRating());
         assertEquals("Ottimo libro!", interaction.getReview());
+        assertEquals(testDate, interaction.getEndDate(), "La data salvata nel DB deve corrispondere a quella passata");
     }
 }

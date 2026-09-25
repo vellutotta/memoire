@@ -4,6 +4,7 @@ import model.Book;
 import model.ReadingInteraction;
 import model.ReadingStatus;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface BookDAO {
@@ -25,13 +26,14 @@ public interface BookDAO {
     //recupera l'interazione dell'utente con un determinato libro (stato, rating)
     ReadingInteraction getInteraction(String bookId, String userId);
 
-    //aggiorna lo stato di lettura di un libro (UNREAD, READING, FINISHED)
-    void updateReadingStatus(String bookId, String userId, ReadingStatus status);
+    //aggiorna lo stato di lettura di un libro indicando la data selezionata
+    void updateReadingStatus(String bookId, String userId, ReadingStatus status, LocalDate selectedDate);
 
     //aggiorna la valutazione in stelle (da 1 a 5)
     void updateRating(String bookId, String userId, int rating);
 
-    void updateReview(String bookId, String userId, int rating, String reviewText);
+    //aggiorna la recensione e la valutazione indicando la data selezionata
+    void updateReview(String bookId, String userId, int rating, String reviewText, LocalDate selectedDate);
 
     //filtra i libri in base allo stato di lettura
     List<Book> getBooksByStatus(String userId, ReadingStatus status);

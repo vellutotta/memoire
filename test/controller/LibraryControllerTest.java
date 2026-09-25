@@ -16,7 +16,6 @@ public class LibraryControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Iniettiamo esplicitamente il MockBookDAO invece di usare il DB reale
         controller = new LibraryController(new MockBookDAO());
     }
 

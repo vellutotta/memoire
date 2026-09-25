@@ -119,13 +119,15 @@ public class BookDAOImpl implements BookDAO {
     }
 
     @Override
-    public void updateReadingStatus(String bookId, String userId, ReadingStatus status) {
-        String sql = "INSERT INTO User_Books (book_id, user_id, status) VALUES (?, ?, ?) " +
-                "ON CONFLICT (book_id, user_id) DO UPDATE SET status = EXCLUDED.status";
+    public void updateReadingStatus(String bookId, String userId, ReadingStatus status, java.time.LocalDate selectedDate) {
+        String sql = "INSERT INTO User_Books (book_id, user_id, status, completion_date) VALUES (?, ?, ?, ?) " +
+                "ON CONFLICT (book_id, user_id) DO UPDATE SET status = EXCLUDED.status, " +
+                "completion_date = COALESCE(User_Books.completion_date, EXCLUDED.completion_date)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, bookId);
             stmt.setString(2, userId);
             stmt.setString(3, status != null ? status.name() : null);
+            stmt.setDate(4, selectedDate != null ? java.sql.Date.valueOf(selectedDate) : null);
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Errore SQL in updateReadingStatus: " + e.getMessage(), e);
@@ -139,6 +141,7 @@ public class BookDAOImpl implements BookDAO {
             stmt.setString(1, bookId);
             stmt.setString(2, userId);
             ResultSet rs = stmt.executeQuery();
+
             if (rs.next()) {
                 String statusStr = rs.getString("status");
                 ReadingStatus status = null;
@@ -148,7 +151,20 @@ public class BookDAOImpl implements BookDAO {
                 int rating = rs.getInt("rating");
                 String review = rs.getString("review");
 
-                return new ReadingInteraction(bookId, userId, status, rating, review);
+                String dateStr = rs.getString("completion_date");
+
+
+                java.time.LocalDate endDate = null;
+                if (dateStr != null && !dateStr.trim().isEmpty()) {
+                    if (dateStr.length() > 10) {
+                        dateStr = dateStr.substring(0, 10);
+                    }
+                    endDate = java.time.LocalDate.parse(dateStr);
+                }
+
+                ReadingInteraction interaction = new ReadingInteraction(bookId, userId, status, rating, review, null, endDate);
+
+                return interaction;
             }
         } catch (SQLException e) {
             throw new RuntimeException("Errore SQL in getInteraction: " + e.getMessage(), e);
@@ -171,14 +187,16 @@ public class BookDAOImpl implements BookDAO {
     }
 
     @Override
-    public void updateReview(String bookId, String userId, int rating, String reviewText) {
-        String sql = "INSERT INTO User_Books (book_id, user_id, rating, review) VALUES (?, ?, ?, ?) " +
-                "ON CONFLICT (book_id, user_id) DO UPDATE SET rating = EXCLUDED.rating, review = EXCLUDED.review";
+    public void updateReview(String bookId, String userId, int rating, String reviewText, java.time.LocalDate selectedDate) {
+        String sql = "INSERT INTO User_Books (book_id, user_id, rating, review, status, completion_date) VALUES (?, ?, ?, ?, 'FINISHED', ?) " +
+                "ON CONFLICT (book_id, user_id) DO UPDATE SET rating = EXCLUDED.rating, review = EXCLUDED.review, status = 'FINISHED', " +
+                "completion_date = COALESCE(User_Books.completion_date, EXCLUDED.completion_date)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, bookId);
             stmt.setString(2, userId);
             stmt.setInt(3, rating);
             stmt.setString(4, reviewText);
+            stmt.setDate(5, selectedDate != null ? java.sql.Date.valueOf(selectedDate) : java.sql.Date.valueOf(java.time.LocalDate.now()));
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Errore SQL in updateReview: " + e.getMessage(), e);
@@ -213,7 +231,8 @@ public class BookDAOImpl implements BookDAO {
     }
 
     public int getLibriLettiCount(String userId) {
-        String sql = "SELECT COUNT(*) FROM User_Books WHERE user_id = ? AND status = 'COMPLETED'";
+        // CORRETTO: Sostituito 'COMPLETED' con 'FINISHED' per coerenza con l'enum
+        String sql = "SELECT COUNT(*) FROM User_Books WHERE user_id = ? AND status = 'FINISHED'";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, userId);
             ResultSet rs = stmt.executeQuery();

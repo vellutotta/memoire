@@ -54,24 +54,27 @@ public class MockBookDAO implements BookDAO {
     }
 
     @Override
-    public void updateReadingStatus(String bookId, String userId, ReadingStatus status) {
+    public void updateReadingStatus(String bookId, String userId, ReadingStatus status, LocalDate selectedDate) {
         ReadingInteraction interaction = getInteraction(bookId, userId);
         interaction.setStatus(status);
+        if (status == ReadingStatus.FINISHED) {
+            interaction.setEndDate(selectedDate != null ? selectedDate : LocalDate.now());
+        }
+    }
+
+    @Override
+    public void updateReview(String bookId, String userId, int rating, String reviewText, LocalDate selectedDate) {
+        ReadingInteraction interaction = getInteraction(bookId, userId);
+        interaction.setRating(rating);
+        interaction.setReviewText(reviewText);
+        interaction.setStatus(ReadingStatus.FINISHED);
+        interaction.setEndDate(selectedDate != null ? selectedDate : LocalDate.now());
     }
 
     @Override
     public void updateRating(String bookId, String userId, int rating) {
         ReadingInteraction interaction = getInteraction(bookId, userId);
         interaction.setRating(rating);
-    }
-
-    @Override
-    public void updateReview(String bookId, String userId, int rating, String reviewText) {
-        ReadingInteraction interaction = getInteraction(bookId, userId);
-        interaction.setRating(rating);
-        interaction.setReviewText(reviewText);
-        interaction.setStatus(ReadingStatus.FINISHED);
-        interaction.setEndDate(LocalDate.now());
     }
 
     @Override

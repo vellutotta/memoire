@@ -649,18 +649,18 @@ public class MainApp extends JFrame {
         for (Book b : allBooks) {
             ReadingInteraction inter = controller.getInteraction(b.getId());
             if (inter != null) {
-                //considera il libro se è segnato come finito/completato O se ha un voto/recensione inserito
+                //considera il libro solo se è finito/completato o se ha un voto
                 boolean isLetto = inter.getStatus() == ReadingStatus.FINISHED
-                        || inter.getStatus() == ReadingStatus.FINISHED
                         || inter.getRating() > 0;
 
                 if (isLetto) {
-                    //AI: se getEndDate() è null, usa la data odierna come fallback per mostrare la statistica
-                    java.time.LocalDate date = (inter.getEndDate() != null)
-                            ? inter.getEndDate()
-                            : java.time.LocalDate.now();
+                    //prende solo la data di completamento effettiva salvata sul DB
+                    java.time.LocalDate date = inter.getEndDate();
 
-                    if (date.getMonthValue() == selectedMonth && date.getYear() == selectedYear) {
+                    System.out.println("LIBRO: " + b.getTitle() + " | DATA TROVATA: " + date);
+
+                    //se la data è presente ed appartiene al mese/anno selezionato lo aggiunge al calendario
+                    if (date != null && date.getMonthValue() == selectedMonth && date.getYear() == selectedYear) {
                         monthInteractions.add(inter);
                         totalStars += inter.getRating();
 
